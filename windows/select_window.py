@@ -9,6 +9,10 @@ class SelectWindow(QWidget):
         self.setGeometry(100, 100, 300, 200)
         self.venta = []
         self.initUI()
+        try:
+            self.showMaximized()
+        except Exception:
+            pass
 
     def initUI(self):
         self.layout = QVBoxLayout()
@@ -29,12 +33,19 @@ class SelectWindow(QWidget):
 
     def abrir_una_ventana(self):
         self.main_window = MainWindow()  # Crear ventana principal
-        self.main_window.show()
+        try:
+            self.main_window.showMaximized()
+        except Exception:
+            self.main_window.show()
         self.close()  # Cerrar la ventana de selección
 
     def abrir_dos_ventanas(self):
         self.main_window1 = MainWindow()  # Crear primera ventana principal
         self.main_window2 = MainWindow()  # Crear segunda ventana principal
-        self.main_window1.show()
-        self.main_window2.show()
+        try:
+            self.main_window1.showMaximized()
+            self.main_window2.showMaximized()
+        except Exception:
+            self.main_window1.show()
+            self.main_window2.show()
         self.close()  # Cerrar la ventana de selección 

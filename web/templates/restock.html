@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-striped align-middle mb-0">
+      <thead class="table-dark"><tr><th>Nombre</th><th class="text-center">Cantidad</th><th class="text-end">Precio</th></tr></thead>
+      <tbody>
+        {% for p in productos %}
+          <tr><td>{{ p.nombre }}</td><td class="text-center">{{ p.cantidad }}</td><td class="text-end">${{ '%.2f'|format(p.precio) }}</td></tr>
+        {% else %}
+          <tr><td colspan="3" class="text-center text-muted py-4">No hay productos para reponer</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+ </div>
+{% endblock %}
+
+

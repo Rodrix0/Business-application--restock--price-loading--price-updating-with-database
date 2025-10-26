@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Buscar producto</h5>
+        <input id="searchInput" class="form-control form-control-lg" placeholder="Escribe o escanea..." autofocus>
+      </div>
+    </div>
+    <div class="card shadow-sm mt-3">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="productsTable">
+            <thead class="table-dark">
+              <tr>
+                <th>Nombre</th>
+                <th class="text-center">Stock</th>
+                <th class="text-end">Precio</th>
+                <th class="text-end">Acción</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">Carrito</h5>
+          <div class="d-flex align-items-center gap-2">
+              <button id="btnManual" class="btn btn-outline-dark btn-sm">Precio manual</button>
+            <select id="metodoPago" class="form-select form-select-sm w-auto">
+              <option>Efectivo</option>
+              <option>Mercado Pago</option>
+            </select>
+            <button id="btnCheckout" class="btn btn-red btn-sm">Confirmar venta</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle mb-0" id="cartTable">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="text-center" style="width:140px">Cantidad</th>
+                <th class="text-end">Precio</th>
+                <th class="text-end">Total</th>
+                <th class="text-end"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+              <tr>
+                <th colspan="3" class="text-end">Total</th>
+                <th class="text-end" id="grandTotal">$0.00</th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const fmt = (n) => `$${n.toFixed(2)}`;
+let cart = [];
+
+function renderCart() {
+  const tbody = document.querySelector('#cartTable tbody');
+  tbody.innerHTML = '';
+  let total = 0;
+  cart.forEach((item, idx) => {
+    const subtotal = item.precio * item.cantidad;
+    total += subtotal;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>${item.nombre}</td>
+        <td class="text-center">
+          <input type="number" min="1" class="form-control form-control-sm text-center" value="${item.cantidad}" data-idx="${idx}">
+        </td>
+        <td class="text-end">${fmt(item.precio)}</td>
+        <td class="text-end">${fmt(subtotal)}</td>
+        <td class="text-end"><button class="btn btn-sm btn-outline-danger" data-remove="${idx}">Quitar</button></td>
+      </tr>`);
+  });
+  document.getElementById('grandTotal').textContent = fmt(total);
+}
+
+function addToCart(prod) {
+  const existing = cart.find(p => p.nombre === prod.nombre);
+  if (existing) existing.cantidad += 1; else cart.push({ nombre: prod.nombre, cantidad: 1, precio: prod.precio });
+  renderCart();
+}
+
+async function fetchProducts(q='') {
+  const url = q ? `/api/products?q=${encodeURIComponent(q)}` : '/api/products';
+  const res = await fetch(url);
+  const data = await res.json();
+  const tbody = document.querySelector('#productsTable tbody');
+  tbody.innerHTML = '';
+  data.items.forEach(item => {
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td>${item.nombre}</td>
+        <td class="text-center">${item.cantidad}</td>
+        <td class="text-end">${fmt(item.precio)}</td>
+        <td class="text-end"><button class="btn btn-sm btn-dark" data-add='${JSON.stringify(item)}'>Agregar</button></td>
+      </tr>`);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const search = document.getElementById('searchInput');
+  fetchProducts();
+  let timer;
+  search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => fetchProducts(search.value.trim()), 150); });
+  search.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); fetchProducts(search.value.trim()); }});
+  document.body.addEventListener('click', e => {
+    const add = e.target.closest('[data-add]');
+    if (add) addToCart(JSON.parse(add.getAttribute('data-add')));
+    const rm = e.target.closest('[data-remove]');
+    if (rm) { cart.splice(parseInt(rm.getAttribute('data-remove')), 1); renderCart(); }
+  });
+  document.querySelector('#cartTable tbody').addEventListener('input', e => {
+    const i = e.target;
+    if (i.type === 'number' && i.hasAttribute('data-idx')) { const idx = parseInt(i.getAttribute('data-idx')); cart[idx].cantidad = Math.max(1, parseInt(i.value||'1')); renderCart(); }
+  });
+  document.getElementById('btnCheckout').addEventListener('click', async () => {
+    if (!cart.length) return alert('El carrito está vacío');
+    const metodo = document.getElementById('metodoPago').value;
+    const res = await fetch('/api/checkout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ items: cart, metodo_pago: metodo }) });
+    const data = await res.json();
+    if (data.ok) {
+      cart = []; renderCart(); fetchProducts(search.value.trim());
+      if (metodo === 'Mercado Pago') alert('Mostrando QR en tu app de escritorio');
+      else alert('Venta confirmada');
+    } else { alert('Error: '+(data.error||'desconocido')); }
+  });
+
+  // Precio manual: agrega un ítem con nombre "Precio Manual", cantidad 1 y precio = monto
+  document.getElementById('btnManual').addEventListener('click', () => {
+    const valor = prompt('Ingrese el precio manual:');
+    if (valor === null) return;
+    const monto = parseFloat((valor || '').toString().replace(',', '.'));
+    if (isNaN(monto) || monto <= 0) { alert('Ingrese un monto válido'); return; }
+    cart.push({ nombre: 'Precio Manual', cantidad: 1, precio: monto });
+    renderCart();
+  });
+});
+</script>
+{% endblock %}
+
+
+

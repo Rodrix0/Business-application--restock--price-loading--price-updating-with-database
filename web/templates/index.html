@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="text-center py-5">
+  <h1 class="display-5 fw-bold">Bienvenido</h1>
+  <p class="lead text-secondary">Elige una opción para comenzar</p>
+  <div class="d-flex justify-content-center gap-3 flex-wrap mt-4">
+    <a href="/sell" class="btn btn-red btn-lg px-4">Vender</a>
+    <a href="/restock" class="btn btn-outline-dark btn-lg px-4">Restock</a>
+    <a href="/sales" class="btn btn-outline-danger btn-lg px-4">Ventas</a>
+    <a href="/manage" class="btn btn-outline-dark btn-lg px-4">Gestionar Productos</a>
+  </div>
+</div>
+{% endblock %}
+
+

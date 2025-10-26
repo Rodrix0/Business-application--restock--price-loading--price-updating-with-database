@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Productos</h5>
+        <div class="table-responsive" style="max-height:60vh">
+          <table class="table table-hover align-middle mb-0" id="listTable">
+            <thead class="table-dark"><tr><th>Nombre</th><th class="text-center">Cant.</th><th class="text-end">Precio</th></tr></thead>
+            <tbody>
+              {% for p in productos %}
+                <tr data-item='{{ p | tojson | safe }}'><td>{{ p.nombre }}</td><td class="text-center">{{ p.cantidad }}</td><td class="text-end">${{ '%.2f'|format(p.precio) }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Insertar / Actualizar</h5>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Nombre</label><input id="fNombre" class="form-control" placeholder="Nombre"></div>
+          <div class="col-md-3"><label class="form-label">Precio</label><input id="fPrecio" type="number" step="0.01" class="form-control" placeholder="0.00"></div>
+          <div class="col-md-3"><label class="form-label">Cantidad</label><input id="fCantidad" type="number" class="form-control" placeholder="0"></div>
+          <div class="col-md-6"><label class="form-label">Código de barras</label><input id="fBarcode" class="form-control" placeholder="Escanea o escribe..."></div>
+          <div class="col-12"><button id="btnGuardar" class="btn btn-red">Guardar</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('#listTable tbody').addEventListener('click', (e) => {
+    const tr = e.target.closest('tr[data-item]');
+    if (!tr) return;
+    const item = JSON.parse(tr.getAttribute('data-item'));
+    document.getElementById('fNombre').value = item.nombre;
+    document.getElementById('fPrecio').value = item.precio;
+    document.getElementById('fCantidad').value = item.cantidad;
+    document.getElementById('fBarcode').value = item.codigo_barra || '';
+  });
+
+  document.getElementById('btnGuardar').addEventListener('click', async () => {
+    const payload = {
+      nombre: document.getElementById('fNombre').value.trim(),
+      precio: parseFloat(document.getElementById('fPrecio').value || '0'),
+      cantidad: parseInt(document.getElementById('fCantidad').value || '0'),
+      codigo_barra: document.getElementById('fBarcode').value.trim()
+    };
+    if (!payload.nombre || isNaN(payload.precio) || isNaN(payload.cantidad)) { alert('Completa nombre, precio y cantidad'); return; }
+    const res = await fetch('/api/product', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.ok) { alert('Guardado'); location.reload(); } else { alert('Error: '+(data.error||'desconocido')); }
+  });
+});
+</script>
+{% endblock %}
+
+

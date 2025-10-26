@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or 'Gestión de Ventas' }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      :root{ --red:#dc3545; --black:#000; }
+      .bg-hero{background:linear-gradient(135deg,#fff 0%,#f6f7fb 100%);} 
+      .navbar{border-bottom:3px solid var(--red)}
+      .brand{color:var(--red)!important; font-weight:800; letter-spacing:.5px}
+      .card-title{border-left:4px solid var(--red); padding-left:.5rem}
+      .btn-red{background:var(--red); border-color:var(--red); color:#000}
+      .btn-red:hover{background:#c82333; border-color:#c82333; color:#000}
+    </style>
+  </head>
+  <body class="bg-hero">
+    <nav class="navbar navbar-expand-lg bg-dark navbar-dark">
+      <div class="container">
+        <a class="navbar-brand brand" href="/">Mi Negocio</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div id="nav" class="collapse navbar-collapse">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="/sell">Vender</a></li>
+            <li class="nav-item"><a class="nav-link" href="/restock">Restock</a></li>
+            <li class="nav-item"><a class="nav-link" href="/sales">Ventas</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <main class="py-4">
+      <div class="container">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+  </html>
+
+
